@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
+const API_URL = "https://functions.poehali.dev/e1e5d429-37a1-4009-8168-b59ef336ccd1";
+
+async function sendLead(name: string, phone: string, message: string, source: string) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, phone, message, source }),
+  });
+  if (!res.ok) throw new Error("Ошибка отправки");
+}
+
 const HERO_IMG = "https://cdn.poehali.dev/projects/e97a9065-ef4c-4276-8034-487d6c7639a3/files/e50e8ad7-6fc3-4167-96bc-373ff0af1b06.jpg";
 const INTERIOR_IMG = "https://cdn.poehali.dev/projects/e97a9065-ef4c-4276-8034-487d6c7639a3/files/17b90a72-e432-4bae-9575-c148baffabee.jpg";
 const BUILD_IMG = "https://cdn.poehali.dev/projects/e97a9065-ef4c-4276-8034-487d6c7639a3/files/a33f397a-bae6-42ac-884b-95358097a292.jpg";
@@ -16,7 +27,7 @@ const navLinks = [
 const specs = [
   { icon: "Home", title: "Площадь", value: "от 60 до 300 м²", desc: "Проекты любой площади под ваши задачи" },
   { icon: "Thermometer", title: "Теплопотери", value: "до 30 Вт/м²", desc: "Современная теплоизоляция минеральной ватой 200 мм" },
-  { icon: "Clock", title: "Срок строительства", value: "3–6 месяцев", desc: "Быстровозводимая технология каркасного строительства" },
+  { icon: "Clock", title: "Срок строительства", value: "5–7 дней", desc: "С момента утверждения проекта до завершения строительства" },
   { icon: "Shield", title: "Срок службы", value: "50+ лет", desc: "Качественные материалы и продуманные конструкции" },
   { icon: "Leaf", title: "Энергоэффективность", value: "А+", desc: "Высокий класс энергоэффективности, низкие счета за отопление" },
   { icon: "Layers", title: "Фундамент", value: "Свайный / лента", desc: "Подбор под геологию участка" },
@@ -34,11 +45,47 @@ export default function Index() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const [orderName, setOrderName] = useState("");
+  const [orderPhone, setOrderPhone] = useState("");
+  const [orderStatus, setOrderStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
+
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactMsg, setContactMsg] = useState("");
+  const [contactStatus, setContactStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
+
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  async function handleOrderSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setOrderStatus("loading");
+    try {
+      await sendLead(orderName, orderPhone, "", "Форма «Заказать»");
+      setOrderStatus("ok");
+      setOrderName("");
+      setOrderPhone("");
+    } catch {
+      setOrderStatus("err");
+    }
+  }
+
+  async function handleContactSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setContactStatus("loading");
+    try {
+      await sendLead(contactName, contactPhone, contactMsg, "Форма «Контакты»");
+      setContactStatus("ok");
+      setContactName("");
+      setContactPhone("");
+      setContactMsg("");
+    } catch {
+      setContactStatus("err");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -135,7 +182,7 @@ export default function Index() {
               </p>
               <div className="grid grid-cols-3 gap-6">
                 {[
-                  { num: "9+", label: "лет опыта" },
+                  { num: "10+", label: "лет опыта" },
                   { num: "130+", label: "домов построено" },
                   { num: "100%", label: "довольных клиентов" },
                 ].map((s) => (
@@ -229,22 +276,36 @@ export default function Index() {
               Оставьте заявку — мы свяжемся в течение 30 минут и бесплатно проконсультируем вас по выбору проекта, участку и бюджету.
             </p>
 
-            <form className="flex flex-col sm:flex-row gap-4" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="text"
-                placeholder="Ваше имя"
-                className="flex-1 px-5 py-4 bg-[hsl(36,20%,97%)]/10 border border-[hsl(36,20%,97%)]/30 text-[hsl(36,20%,97%)] placeholder-[hsl(36,20%,97%)]/50 font-body text-sm focus:outline-none focus:border-[hsl(36,20%,97%)]/70 transition"
-              />
-              <input
-                type="tel"
-                placeholder="Телефон"
-                className="flex-1 px-5 py-4 bg-[hsl(36,20%,97%)]/10 border border-[hsl(36,20%,97%)]/30 text-[hsl(36,20%,97%)] placeholder-[hsl(36,20%,97%)]/50 font-body text-sm focus:outline-none focus:border-[hsl(36,20%,97%)]/70 transition"
-              />
-              <button type="submit" className="bg-[hsl(36,20%,97%)] text-[hsl(97,22%,28%)] px-8 py-4 font-body text-sm tracking-widest uppercase font-semibold hover:bg-white transition-colors whitespace-nowrap">
-                Отправить
-              </button>
-            </form>
-
+            {orderStatus === "ok" ? (
+              <div className="bg-[hsl(36,20%,97%)]/15 border border-[hsl(36,20%,97%)]/30 px-6 py-5 font-body text-[hsl(36,20%,97%)] text-base">
+                ✅ Заявка отправлена! Мы свяжемся с вами в ближайшее время.
+              </div>
+            ) : (
+              <form className="flex flex-col sm:flex-row gap-4" onSubmit={handleOrderSubmit}>
+                <input
+                  type="text"
+                  placeholder="Ваше имя"
+                  value={orderName}
+                  onChange={(e) => setOrderName(e.target.value)}
+                  required
+                  className="flex-1 px-5 py-4 bg-[hsl(36,20%,97%)]/10 border border-[hsl(36,20%,97%)]/30 text-[hsl(36,20%,97%)] placeholder-[hsl(36,20%,97%)]/50 font-body text-sm focus:outline-none focus:border-[hsl(36,20%,97%)]/70 transition"
+                />
+                <input
+                  type="tel"
+                  placeholder="Телефон"
+                  value={orderPhone}
+                  onChange={(e) => setOrderPhone(e.target.value)}
+                  required
+                  className="flex-1 px-5 py-4 bg-[hsl(36,20%,97%)]/10 border border-[hsl(36,20%,97%)]/30 text-[hsl(36,20%,97%)] placeholder-[hsl(36,20%,97%)]/50 font-body text-sm focus:outline-none focus:border-[hsl(36,20%,97%)]/70 transition"
+                />
+                <button type="submit" disabled={orderStatus === "loading"} className="bg-[hsl(36,20%,97%)] text-[hsl(97,22%,28%)] px-8 py-4 font-body text-sm tracking-widest uppercase font-semibold hover:bg-white transition-colors whitespace-nowrap disabled:opacity-60">
+                  {orderStatus === "loading" ? "..." : "Отправить"}
+                </button>
+              </form>
+            )}
+            {orderStatus === "err" && (
+              <p className="font-body text-red-300 text-sm mt-2">Ошибка отправки, попробуйте ещё раз.</p>
+            )}
             <p className="font-body text-[hsl(36,20%,97%)]/50 text-xs mt-4">
               Нажимая «Отправить», вы соглашаетесь с политикой конфиденциальности
             </p>
@@ -265,10 +326,10 @@ export default function Index() {
 
               <div className="space-y-6">
                 {[
-                  { icon: "Phone", label: "Телефон", value: "+7 (900) 000-00-00" },
+                  { icon: "Phone", label: "Телефон", value: "+7 (989) 628-17-42" },
                   { icon: "Mail", label: "Email", value: "info@greenframehouse.ru" },
                   { icon: "MapPin", label: "Сайт", value: "greenframehouse.ru" },
-                  { icon: "Clock", label: "Режим работы", value: "Пн–Пт: 9:00 – 19:00" },
+                  { icon: "Clock", label: "Режим работы", value: "Пн–Вс: 9:00 – 22:00" },
                 ].map((c) => (
                   <div key={c.label} className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-[hsl(97,22%,28%)]/10 flex items-center justify-center rounded-sm flex-shrink-0">
@@ -285,26 +346,43 @@ export default function Index() {
 
             <div className="bg-[hsl(36,15%,93%)] p-8 md:p-12">
               <h3 className="font-display text-2xl font-light text-[hsl(30,15%,12%)] mb-6">Задать вопрос</h3>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <input
-                  type="text"
-                  placeholder="Имя"
-                  className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition"
-                />
-                <input
-                  type="tel"
-                  placeholder="Телефон"
-                  className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition"
-                />
-                <textarea
-                  placeholder="Опишите ваш проект или вопрос"
-                  rows={4}
-                  className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition resize-none"
-                />
-                <button type="submit" className="btn-primary w-full text-center">
-                  Отправить сообщение
-                </button>
-              </form>
+              {contactStatus === "ok" ? (
+                <div className="bg-[hsl(97,22%,28%)]/10 border border-[hsl(97,22%,28%)]/30 px-6 py-5 font-body text-[hsl(30,15%,12%)] text-base">
+                  ✅ Сообщение отправлено! Мы ответим вам в ближайшее время.
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleContactSubmit}>
+                  <input
+                    type="text"
+                    placeholder="Имя"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Телефон"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition"
+                  />
+                  <textarea
+                    placeholder="Опишите ваш проект или вопрос"
+                    rows={4}
+                    value={contactMsg}
+                    onChange={(e) => setContactMsg(e.target.value)}
+                    className="w-full px-4 py-3 bg-background border border-[hsl(36,15%,85%)] font-body text-sm text-[hsl(30,15%,12%)] placeholder-[hsl(30,10%,45%)] focus:outline-none focus:border-[hsl(97,22%,28%)] transition resize-none"
+                  />
+                  {contactStatus === "err" && (
+                    <p className="font-body text-red-500 text-sm">Ошибка отправки, попробуйте ещё раз.</p>
+                  )}
+                  <button type="submit" disabled={contactStatus === "loading"} className="btn-primary w-full text-center disabled:opacity-60">
+                    {contactStatus === "loading" ? "Отправка..." : "Отправить сообщение"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
