@@ -43,27 +43,27 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* NAV */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[hsl(36,20%,97%)] shadow-sm" : "bg-transparent"}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[hsl(36,20%,97%)] shadow-sm" : "bg-white/15 backdrop-blur-sm"}`}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <a href="#home" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[hsl(97,22%,28%)] flex items-center justify-center">
               <span className="text-[hsl(36,20%,97%)] text-xs font-bold font-body tracking-wider">GF</span>
             </div>
-            <span className="font-display text-xl font-semibold tracking-wide text-[hsl(30,15%,12%)]">
-              GreenFrame<span className="text-[hsl(97,22%,28%)]">House</span>
+            <span className={`font-display text-xl font-semibold tracking-wide transition-colors duration-300 ${scrolled ? "text-[hsl(30,15%,12%)]" : "text-white"}`}>
+              GreenFrame<span className={scrolled ? "text-[hsl(97,22%,28%)]" : "text-[hsl(97,40%,75%)]"}>House</span>
             </span>
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((l) => (
-              <a key={l.href} href={l.href} className="nav-link">
+              <a key={l.href} href={l.href} className={`nav-link transition-colors duration-300 ${scrolled ? "" : "!text-white hover:!text-[hsl(97,40%,75%)]"}`}>
                 {l.label}
               </a>
             ))}
           </nav>
 
           <button
-            className="md:hidden text-[hsl(30,15%,12%)]"
+            className={`md:hidden transition-colors duration-300 ${scrolled ? "text-[hsl(30,15%,12%)]" : "text-white"}`}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Icon name={menuOpen ? "X" : "Menu"} size={24} />
